@@ -69,6 +69,10 @@ exampleExp = Lit 12 `Plus` (App (Abs "x" (Var "x")) (Lit 4 `Plus` Lit 2))
 badExp :: Exp
 badExp = (Plus (Lit 1) (Abs "x" (Var "x")))
 
+-- | Undefined variable
+undefExp :: Exp
+undefExp = (Var "x")
+
 -- >>> eval0 Map.empty exampleExp
 -- IntVal 18
 
@@ -162,4 +166,35 @@ eval2b env (App e1 e2) = do
 
 -- >>> runEval2 (eval2b Map.empty exampleExp)
 -- Right (IntVal 18)
+
+
+-- | The final version for  evaluation with error messages
+eval2 :: Env -> Exp -> Eval2 Value
+eval2 env (Lit i) = return $ IntVal i
+eval2 env (Var n) = case Map.lookup n env of
+    Nothing  -> throwError ("undef variable: " ++ n)
+    Just val -> return val
+eval2 env (Plus e1 e2) = do    -- Improved to check the evaluation results
+    e1' <- eval2 env e1
+    e2' <- eval2 env e2
+    case (e1', e2') of
+        (IntVal i1, IntVal i2) -> return $ IntVal(i1 + i2)
+        _ -> throwError "type error"
+eval2 env (Abs n e) = return $ FunVal env n e
+eval2 env (App e1 e2) = do
+    val1 <- eval2 env e1
+    val2 <- eval2 env e2
+    case val1 of
+        FunVal env' n body -> eval2 (Map.insert n val2 env') body
+        _                  -> throwError "type Error"    -- Added !!
+
+-- >>> runEval2 (eval2 Map.empty badExp)
+-- Left "type error"
+
+-- >>> runEval2 (eval2 Map.empty exampleExp)
+-- Right (IntVal 18)
+
+-- >> runEval2 (eval2 Map.empty undefExp)
+-- Left "undef variable: x"
+
 
