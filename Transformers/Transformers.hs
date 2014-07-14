@@ -197,4 +197,42 @@ eval2 env (App e1 e2) = do
 -- >> runEval2 (eval2 Map.empty undefExp)
 -- Left "undef variable: x"
 
+-- ---------------------------------------------------------------------------
+-- Hiding the Environment
+-- ---------------------------------------------------------------------------
 
+-- | Take Eval2 andadd a ReaderT at the beginning
+type Eval3 a = ReaderT Env (ErrorT String Identity) a
+
+-- | The run function for the type Eval3
+-- Note: Sequence of used run functions is inverse from the moand stack
+runEval3 :: Env -> Eval3 a -> Either String a
+runEval3 env ev = runIdentity (runErrorT (runReaderT ev env ))
+
+-- | Eval3 is Eval2 but without the environment
+eval3 :: Exp -> Eval3 Value
+eval3 (Lit i) = return $ IntVal i
+eval3 (Var n) = do
+   env <- ask       -- ask is used to access the env from the Reader monad
+   case Map.lookup n env of
+       Nothing  -> throwError ("undef variable: " ++ n)
+       Just val -> return val
+eval3 (Plus e1 e2) = do
+    e1' <- eval3 e1
+    e2' <- eval3 e2
+    case (e1', e2') of
+        (IntVal i1, IntVal i2) -> return $ IntVal(i1 + i2)
+        _ -> throwError "type error"
+eval3 (Abs n e) = do
+    env <- ask
+    return $ FunVal env n e
+eval3 (App e1 e2) = do
+    val1 <- eval3 e1
+    val2 <- eval3 e2
+    case val1 of
+        -- Note the local and the const functions here !!!
+        FunVal env' n body -> local (const (Map.insert n val2 env')) (eval3 body)
+        _                  -> throwError "type Error"
+
+-- >>> runEval3 Map.empty (eval3 exampleExp)
+-- Right (IntVal 18)
