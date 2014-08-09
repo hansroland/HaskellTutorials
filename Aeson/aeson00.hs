@@ -68,6 +68,11 @@ instance FromJSON Paste where
           <*> (v .:? "user")
           <*> (v .: "contents")
 
+-- Notes: 
+--        (.:)  This json element must be present
+--        (.:?) This JSON element may be missing
+--        The date is further processed with the parseRHTime function
+
 -- | Function to parse and UTCTime
 parseRHTime :: String -> Maybe UTCTime
 parseRHTime = parseTime defaultTimeLocale "%FT%X%QZ"
