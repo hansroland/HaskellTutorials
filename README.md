@@ -2,6 +2,13 @@
 
 This project contains the code to some Haskell tutorials I'm studing.
 
+#### Subdirectory Aeson
+
+##### File aeson.hs
+A little exampl, that shows how to parse a simpl JSON strin to a Hasekell data type.
+
+See: [Easy JSON Parsing in Haskell With Aeson](http://blog.raynes.me/blog/2012/11/27/easy-json-parsing-in-haskell-with-aeson/)
+
 #### SubDirectory Transformers
 
 ##### File Transformers.hs
