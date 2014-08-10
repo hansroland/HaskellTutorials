@@ -6,10 +6,18 @@ This project contains the code to some Haskell tutorials I'm studing.
 
 Some tutorials about Web programming in Haskell
 
-##### File aeson.hs
+##### File aeson00.hs
 A little exampl, that shows how to parse a simpl JSON strin to a Hasekell data type.
 
 See: [Easy JSON Parsing in Haskell With Aeson](http://blog.raynes.me/blog/2012/11/27/easy-json-parsing-in-haskell-with-aeson/)
+
+#### File wreq00.hs
+
+See: [wreq: a Haskell web client library](http://www.serpentine.com/wreq/)
+
+#### File aeson01.hs
+
+Combine aeson00.hs with wreq00.hs
 
 #### SubDirectory Transformers
 
