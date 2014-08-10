@@ -2,7 +2,9 @@
 
 This project contains the code to some Haskell tutorials I'm studing.
 
-#### Subdirectory Aeson
+#### Subdirectory Web
+
+Some tutorials about Web programming in Haskell
 
 ##### File aeson.hs
 A little exampl, that shows how to parse a simpl JSON strin to a Hasekell data type.
