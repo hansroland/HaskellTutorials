@@ -43,17 +43,33 @@ The basic data elements:
   
 -}
 
+-- -------------------------------------------------------------------
+-- Operations to use Accelerate arrays in the Haskell world
+-- -------------------------------------------------------------------
+
 -- create accelerate arrays with fromList
 -- Note: this creates an array in Haskell memory
 fromList (Z:.10) [1..10] :: Vector Int
 
--- Build a 2 dim array and access an element
--- Note: indexArray works in the Haskell world !!:
+-- Build a 2 dim array
 let arr = fromList (Z:.3:.5) [1..] :: Array DIM2 Int
-indexArray arr (Z:.2:.1):i
+
+-- Access a single element with a given index. Note first array, then index
+indexArray arr (Z:.2:.1)
+
+-- Create a normal list from an array
+toList :: Array sh e -> [e]
 
 -- Arrays of tuples are possible:
 fromList (Z:.2:.3) (Prelude.zip [1..] [1..]) :: Array DIM2 (Int, Int)
+
+-- Get the shape from an array
+arrayShape :: Shape sh => Array sh e -> sh
+
+-- Get the dimensions of a shape
+arrayDim Z  -- -> 0
+
+arrayDim (arrayShape arr)   -- -> 2
 
 
 -- ----------------------------------------------------------------------
@@ -115,6 +131,28 @@ run $ generate (index2 3 5) (\ix -> let Z:.y:.x = unlift ix in x+y) :: Array DIM
 --       ix has type Exp DIM2
 
 
+-- --------------------------------------------------------------------
+-- Extraction of subarrays
+-- --------------------------------------------------------------------
+slice :: ???
 
 
+-- ---------------------------------------------------------------------
+-- Processing of Arrays in the GPU
+-- ---------------------------------------------------------------------
+-- Apply the given unary function element-wise to the given array
+map :: (Shape ix, Elt a, Elt b) =>
+       (Exp a -> Exp b) -> Acc (Array ix a) -> Acc (Array ix b)
+
+-- Apply the given binary function element-wise to the two arrays
+zipWith :: (Shape ix, Elt a, Elt b, Elt c) =>
+       (Exp a -> Exp b -> Exp c) -> Acc (Array ix a) -> Acc (Array ix b)
+       -> Acc (Array ix c)
+
+-- Reduction of the innermost dimension of an array of arbitary rank
+-- Note: the first argument needs to be an associative function to get
+--       efficient parallel implementation.
+
+
+run $ A.fold (+) 0 (use arr)
 
