@@ -33,5 +33,11 @@ See: [Martin Grabmüller: Monad Transformers Step by Step](http://www.cs.virgini
 
 See: [Jakub Arnold: Building Monad Transformers Part 1](http://blog.jakubarnold.cz/2014/07/22/building-monad-transformers-part-1.html)
 
+#### SubDirectory AutoBuilder
+
+See: [Continuous Builds in Haskell](http://voyageintech.wordpress.com/2014/11/05/continuous-builds-in-haskell-part-1/)
+
+This tutorial shows how to register on Linux for events on directories and how to handle these events.
+
 
      
