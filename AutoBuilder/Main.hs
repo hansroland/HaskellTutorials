@@ -10,6 +10,7 @@ import System.Directory
 import System.Environment
 import System.INotify
 import System.IO
+import System.FilePath
 
 
 main = do
@@ -42,16 +43,13 @@ eventHandler _                         = return ()
 -- If the file is a *.hs
 handleFilteredFile :: Event -> FilePath -> IO()
 handleFilteredFile ev fp = do
-    if filterHS fp
+    if isMonitoredFile fp
         then print ev >> doWork fp
         else return ()
 
 -- | Check that the file extension is .hs
-filterHS :: FilePath -> Bool
-filterHS fn = (=="hs")
-            $ reverse
-            $ takeWhile (/= '.')
-            $ reverse fn
+isMonitoredFile :: FilePath -> Bool
+isMonitoredFile fp = (takeExtension fp) `elem` [".hs"]
 
 doWork :: FilePath -> IO()
 doWork fp = do
