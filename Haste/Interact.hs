@@ -15,4 +15,6 @@ main = do
     button <- mkButton "Submit answer"
     column documentBody [input, button]
 
+    onEvent button OnClick $ \_ pos -> do
+        setProp input "value" "You clicked!!"
 
