@@ -9,6 +9,8 @@
 
 import Haste
 
+import Haste.App
+
 -- | The main function creates a very simple page layout
 main = do
     text1 <- newTextElem "Top Left "
@@ -22,20 +24,25 @@ main = do
     row bottomRow [text3, text4]
     column documentBody [topRow, bottomRow]
 
- 
 -- | Add the element as a div child
+wrapDiv :: MonadIO m => Elem -> m Elem
 wrapDiv e = do
     d <- newElem "div"
     addChild e d
     return d
 
 -- | Add several elements
+addChildren :: MonadIO m => Elem -> [Elem] -> m()
 addChildren parent children = sequence_ [addChild c parent | c <- children]
 
--- | Add several elements besides each other
+-- | Add several elements from the second argument besides each other
+--   to the first argument
+row :: MonadIO m => Elem -> [Elem] -> m()
 row = addChildren
 
--- | Add several elements below each other 
+-- | Add several from the second argument elements below each other to the
+--    first argument
+column :: MonadIO m => Elem -> [Elem] -> m()
 column parent children = do
     cs <- sequence [wrapDiv c | c <- children]
     addChildren parent cs
