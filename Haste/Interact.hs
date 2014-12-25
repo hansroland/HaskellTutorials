@@ -11,12 +11,8 @@ import Haste
 import HasteHelpers
 
 main = do
-    input  <- newElem "input"
-    button <- newElem "button"
-    setProp input "type" "text"
-    setProp input "size" "30"
-    setProp input "value" "Type your answer here ..."
-    setProp button "innerHTML" "Submit answer"
+    input  <- mkInput 30 "Type your answer here ..."
+    button <- mkButton "Submit answer"
     column documentBody [input, button]
 
 

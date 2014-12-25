@@ -37,3 +37,20 @@ column :: MonadIO m => Elem -> [Elem] -> m()
 column parent children = do
     cs <- sequence [wrapDiv c | c <- children]
     addChildren parent cs
+
+-- | Helper function to create an input field
+--  Parameters: width and initial text
+mkInput :: MonadIO m => Int -> String -> m Elem
+mkInput width init = do
+    input <- newElem "input"
+    setProp input "type" "text"
+    setProp input "size" (show width)
+    setProp input "value" init
+    return input
+
+-- | Helper function to create a pushButton
+mkButton :: MonadIO m => String -> m Elem
+mkButton label = do
+    button <- newElem "button"
+    setProp button "innerHTML" label
+    return button
