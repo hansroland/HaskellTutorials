@@ -11,15 +11,9 @@
 -- -------------------------------------------------------------------------
 
 import Haste
+import HasteHelpers
 
 main = do
     text1 <- newTextElem "This is some text."
     text2 <- newTextElem "This is another text"
     row documentBody [text1, text2]
-
-
-addChildren :: Elem -> [Elem] -> IO ()
-addChildren parent children = sequence_ [addChild c parent | c <- children]
-
-row :: Elem -> [Elem] -> IO ()
-row = addChildren
