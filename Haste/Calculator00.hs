@@ -21,18 +21,17 @@ main = do
     output <- mkLabel ""
     row documentBody [inp1, lab1, inp2, lab2, output]
 
-    onEvent inp1 OnKeyUp $ \_  -> do
-        showIntVal output =<< recalc inp1 inp2
+    -- Event handlers
+    onEvent inp1 OnKeyUp $ \_  -> calculate inp1 inp2 output
+    onEvent inp2 OnKeyUp $ \_  -> calculate inp1 inp2 output
 
-    onEvent inp2 OnKeyUp $ \_  -> do
-        showIntVal output =<< recalc inp1 inp2
-
-recalc :: MonadIO m => Elem -> Elem -> m Int
-recalc elem1 elem2 = do
-    val1 <- getVal elem1
-    val2 <- getVal elem2
-    return $ val1 + val2
-
+-- | Calculate a new sum after an evemt
+calculate :: MonadIO m => Elem -> Elem -> Elem -> m()
+calculate inp1 inp2 out = do
+    val1 <- getVal inp1
+    val2 <- getVal inp2
+    showIntVal out (val1 + val2)
+   
 -- | Attention : read of an empty string does not return a string
 myRead :: String -> Int
 myRead "" = 0
