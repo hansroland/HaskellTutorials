@@ -32,15 +32,14 @@ calculate inp1 inp2 out = do
     val2 <- getVal inp2
     showIntVal out (val1 + val2)
    
--- | Attention : read of an empty string does not return a string
-myRead :: String -> Int
-myRead "" = 0
-myRead n  = read n
 
 getVal :: MonadIO m => Elem -> m Int
 getVal elem = do
-   text <- getProp elem "value"
-   return $ (myRead text)
+   val <- getValue elem
+   case (val) of
+      Just v  -> return v
+      Nothing -> return 0
+
 
 showIntVal ::  MonadIO m => Elem -> Int -> m ()
 showIntVal elem val = do
