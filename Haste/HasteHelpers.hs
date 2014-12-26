@@ -54,3 +54,11 @@ mkButton label = do
     button <- newElem "button"
     setProp button "innerHTML" label
     return button
+
+-- | Helper function to create a simple label text
+mkLabel :: MonadIO m => String -> m Elem
+mkLabel text = do
+    label <- newElem "span"
+    setProp label "innerHTML" text
+    return label
+
