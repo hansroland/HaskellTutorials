@@ -62,3 +62,12 @@ mkLabel text = do
     setProp label "innerHTML" text
     return label
 
+-- | Helper function to create a simple graphic canvas
+mkCanvas :: Int -> Int -> IO Elem
+mkCanvas width height = do
+    canvas <- newElem "canvas"
+    setStyle canvas "border" "lpx solid black"
+    setStyle canvas "backgroundColor" "white"
+    setProp  canvas "width"  (show width)
+    setProp  canvas "height" (show height)
+    return canvas
