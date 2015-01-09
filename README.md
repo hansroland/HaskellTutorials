@@ -39,5 +39,10 @@ See: [Continuous Builds in Haskell](http://voyageintech.wordpress.com/2014/11/05
 
 This tutorial shows how to register on Linux for events on directories and how to handle these events.
 
+#### SubDirectory LLVM
+
+See: [Implementing a JIT Compiled Language with Haskell and LLVM](http://www.stephendiehl.com/llvm/)
+
+
 
      
