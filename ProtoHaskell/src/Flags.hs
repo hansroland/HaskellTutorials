@@ -3,7 +3,6 @@
 -- ----------------------------------------------------------------------------
 
 module Flags (
-  {-
   -- * Compiler flags
   Flag(..),
   Flags,
@@ -16,7 +15,6 @@ module Flags (
   -- Command line switches
   flagOpts,
   flagFor
-  -}
   ) where
 
 import qualified Data.Set as S
@@ -54,6 +52,9 @@ isSet = flip S.member
 set :: Flags -> Flag -> Flags
 set = flip S.insert
 
+-- | Remove a flag from the flags set
+unset :: Flags -> Flag -> Flags
+unset = flip S.delete
 
 -- | A list of associations with the string and Haskell representations
 --   of all the compiler flags
@@ -70,3 +71,16 @@ flags = [
     ("ddump-rn",         DumpRenamer),
     ("ddump-to-file",    DumpToFile)
     ]
+
+matches :: String -> (String,Flag) -> Maybe Flag
+matches s (flagstr, flag)
+    | ('-' : flagstr) `isPrefixOf` s = Just flag
+    | otherwise = Nothing
+
+-- | Command line switches for flag options
+flagOpts :: [String]
+flagOpts = fmap fst flags
+
+-- | Lookup the flag from a command line option switch
+flagFor :: String -> Maybe Flags.Flag
+flagFor s = msum $ fmap (matches s) flags
