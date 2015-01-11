@@ -53,13 +53,15 @@ data Expr
     deriving (Eq, Show)
     
 
--- data type to model a line in a do group
+-- | Stmt data type to model a line in a do group
+--      The do-notation syntax is written in terms of two constructions,
+--      one for monadic binds and the other for monadic statements.
 data Stmt
     = Generator Pattern Expr  -- pat <- exp
     | Qualifier Expr          -- exp (eg a let expression)
     deriving (Eq, Show)
 
--- | data type for literals
+-- | Literal data type for the atomic data
 data Literal
     = LitInt Int              -- 1
     | LitChar Char            -- 'a'
@@ -75,10 +77,60 @@ data Pattern
     deriving (Eq, Show)
 
 
+data BindGroup = BindGroup
+    { _matchName  :: Name
+    , _matchPats  :: [Match]
+    , _matchType  :: Maybe Type
+    , _matchWhere :: [[Decl]]
+    } deriving (Eq, Show)
+
+
 data Match = Match
     { _matchPat :: [Pattern]
     , _matchBody :: Expr
     } deriving (Eq, Show)
+
+
+data ConDecl
+    = ConDecl Constr Type
+    | RecDecl Constr[(Name, Type)] Type
+    deriving (Eq, Show, Ord)
+
+-- | Decl - all possible declarations
+data Decl
+    = FuncDecl1 BindGroup               -- functions: f x = x + 1
+    | TypeDecl Type                     -- types      f :: Int -> Int
+    | DataDecl Constr [Name] [ConDecl]  -- data defs: data T where {..}
+    | ClassDecl [Pred] Name Type [Decl] -- class      class (P) => where {..}
+    | InstDecl  [Pred] Name Type [Decl] -- instance declarations
+    | FixityDecl FixitySpec             -- infix 1 {...}
+    deriving (Eq, Show)
+
+-- | FixitySepc - Fixity declarations are simply a binding
+--      between the operator symbol and the fixity information.
+data FixitySpec = FixitySpec
+    { fixityFix  :: Fixity
+    , fixityName :: String
+    } deriving (Eq, Show)
+
+data Assoc = L | R | N
+    deriving (Eq, Ord, Show)
+
+data Fixity
+    = Infix Assoc Int
+    | Prefix Int
+    | Postifx Int
+    deriving (Eq, Show)
+
+-- | temporary definition for Pred (
+data Pred = Pred
+    deriving (Show, Eq)
+
+-- | Module - A module has a name and a list of declarations
+data Module = Module Name [Decl]
+   deriving (Eq, Show)
+
+
 
 
 
