@@ -40,8 +40,8 @@ data Name
 
 -- instance Hashable Name where
 
--- instance IsString Name where
---    fromString = Name
+instance IsString Name where
+   fromString = Name
 
 prefix :: String -> Name -> Name
 prefix p (Gen nm i) = Gen (p <> nm) i
