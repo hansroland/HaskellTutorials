@@ -80,7 +80,7 @@ data TyCon
     deriving (Show, Eq, Ord)
 
 
-data Pred 
+data Pred
     = IsIn Name Type
     deriving (Show, Eq, Ord)
 
