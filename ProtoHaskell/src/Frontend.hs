@@ -27,6 +27,41 @@ module Frontend (
      FixitySpec(..),
      Assoc(..),
      Constr,
+
+     -- * Constructors
+     mkEApp,
+     mkELam,
+     mkPair,
+     mkList,
+     mkIf,
+
+     -- * Deconstructors
+     viewApp,
+     viewLam,
+     viewVars,
+
+     -- * Free variables
+    freeVars,
+    allVars,
+    boundVars,
+    occursIn,
+    fconsDecl,
+
+    -- * Declaration manipulation
+    sdef,
+    sname,
+    sget,
+    slookup,
+    ssingleton,
+    globals,
+
+    -- * Declaration grouping
+    groupToplevel,
+    groupDecls,
+
+    -- * Pattern manipulation
+    pvars,
+    freePvs
    ) where
 
 import Prelude hiding(foldr, foldr1, concatMap)
@@ -181,6 +216,14 @@ sdef (FunDecl (BindGroup name [Match [] rhs] tysig _)) = (name, tysig, rhs)
 sdef _ = error "Bind group is not in desugared form"
 
 
+-- | Extract the desugared bind group name.
+sname :: Decl -> Name
+sname (FunDecl (BindGroup name [Match _ _] _ _)) = name
+sname (DataDecl name _ _) = name
+sname (ClassDecl _ name _ _) = name
+sname (InstDecl _ name _ _) = name
+sname _ = error "Bind group is not in desugared form"
+
 -- | Extract a set of the named constructor used in a type
 fcons :: Type -> Set.Set Name
 fcons (TCon (AlgTyCon n)) = Set.singleton n
@@ -193,8 +236,250 @@ fconsConDecl :: ConDecl -> Set.Set Name
 fconsConDecl (ConDecl _ (TForall _ _ ty)) = fcons ty
 fconsConDecl (RecDecl _ _ (TForall _ _ ty)) = fcons ty
 
+-- | Extract a set of the named constructor used in a type declaration
+fconsDecl :: Decl -> Set.Set Name
+fconsDecl (DataDecl _ _ xs) = Set.unions $ fmap fconsConDecl xs
+fconsDecl _ = Set.empty
+
+-- | The global function names
+globals :: Module -> [Name]
+globals (Module _ decls) = fmap sname decls
+  where
+    sname :: Decl -> Name
+    sname (FunDecl (BindGroup name _ _ _)) = name
+    sname (DataDecl name _ _) = name
+    sname (ClassDecl _ name _ _) = name
+    sname (InstDecl _ name _ _) = name
+    sname _ = error "Bind group is not in desugared form"
+
+-------------------------------------------------------------------------------
+-- Grouping
+-------------------------------------------------------------------------------
+
+groupToplevel :: Module -> Module
+groupToplevel (Module nm decls) = Module nm $ mconcat [clsub, icls, datas, funs]
+  where
+    funs =  groupDecls [e | e@FunDecl{} <- decls]
+    datas = [e | e@DataDecl{} <- decls]
+    clsub = [e | e@ClassDecl{} <- decls]
+    icls  = [e | e@InstDecl{} <- decls]
+
+groupBindings :: [BindGroup] -> [BindGroup]
+groupBindings = fmap joinBindings . groupBy ((==) `on` _matchName)
+
+joinBindings :: [BindGroup] -> BindGroup
+joinBindings xs@(x:_) =
+    BindGroup (_matchName x) (concatMap _matchPats xs) (_matchType x) (concatMap _matchWhere xs)
+joinBindings [] = error "empty binding group"
+
+groupDecls :: [Decl] -> [Decl]
+groupDecls decls = fmap FunDecl $ groupBindings (concatMap fgroup decls)
+
+-- --------------------------------------------------------------------
+-- Traversal
+-- --------------------------------------------------------------------
+
+descend :: (Expr -> Expr) -> Expr -> Expr
+descend f ex = runIdentity (descendM (return . f) ex)
+
+-- | General function for bottom up traversals and rewrites in a monadic context
+descendM :: (Monad m, Applicative m) => (Expr -> m Expr) -> Expr -> m Expr
+descendM f e = case e of
+    EApp a b   -> EApp  <$> descendM f a <*> descendM f b
+    EVar a     -> EVar  <$> pure a
+    ELam a b   -> ELam  <$> pure a <*> descendM f b
+    ELit n     -> ELit  <$> pure n
+    ELet n a b -> ELet  <$> pure n <*> descendM f a <*> descendM f b
+    EIf a b c  -> EIf   <$> descendM f a <*> descendM f b <*> descendM f c
+    ECase a xs -> ECase <$> f a <*> traverse (descendCaseM f) xs
+    EAnn a t   -> EAnn  <$> descendM f a <*> pure t
+    --EDo [Stmt] is missing !!!
+    EFail      -> pure EFail
+-- Notes: Leave nodes are just packed with pure
+--        Branch nodes are descended further, other node types like 'Match'
+--        need other descending functions like descendCaseM
 
 
+descendCaseM :: (Monad m, Applicative m) => (Expr -> m Expr) -> Match -> m Match
+descendCaseM f e = case e of
+    Match ps a -> Match <$> pure ps <*> descendM f a
 
 
+compose :: (Expr -> Expr)
+    -> (Expr -> Expr)
+    -> (Expr -> Expr)
+compose f g = descend (f . g)
+
+composeM :: (Applicative m, Monad m)
+    => (Expr -> m Expr)
+    -> (Expr -> m Expr)
+    -> (Expr -> m Expr)
+composeM f g = descendM (f <=< g)
+
+-------------------------------------------------------------------------------
+-- Class AllVar
+-------------------------------------------------------------------------------
+
+-- | Class AllVar: Return a set of all variable names from something
+class AllVars a where
+    allVars :: a -> Set.Set Name
+
+-- | If a is an instance of AllVar also [a] is na instance of AllVars
+instance AllVars a => AllVars [a] where
+    allVars = Set.unions . fmap allVars
+
+--
+instance AllVars Pattern where
+  allVars pt = case pt of
+    PVar n -> Set.singleton n
+    PCon _ ps -> Set.unions $ fmap allVars ps
+    PLit _ -> Set.empty
+    PWild -> Set.empty
+
+instance AllVars Match where
+  allVars ex = case ex of
+    Match pats rhs -> allVars rhs
+
+
+instance AllVars Expr where
+  allVars ex = case ex of
+    EVar x     -> Set.singleton x
+    ELet n v e -> Set.unions [Set.singleton n, allVars v, allVars e]
+    ELam _ e   -> allVars e
+    EApp a b   -> allVars a `Set.union` allVars b
+    ECase n as -> allVars n `Set.union` Set.unions (fmap allVars as)
+    ELit _     -> Set.empty
+    EIf c x y  -> Set.unions [allVars c, allVars x, allVars y]
+    EAnn x _   -> allVars x
+    EFail      -> Set.empty
+
+instance AllVars Decl where
+    allVars (FunDecl bg) = allVars bg
+    allVars (DataDecl {}) = Set.empty
+    allVars (TypeDecl {}) = Set.empty
+    allVars (ClassDecl {}) = Set.empty
+    allVars (InstDecl {}) = Set.empty
+    allVars (FixityDecl {})= Set.empty
+
+instance AllVars BindGroup where
+    allVars (BindGroup _ pats _ _) = Set.unions (fmap allVars pats)
+
+-------------------------------------------------------------------------------
+-- Class FreeVar
+-------------------------------------------------------------------------------
+
+-- | Instances return a set of free variables.
+class FreeVars a where
+    freeVars :: a -> Set.Set Name
+
+-- | Lists of FreeVar instances are FreeVars too
+instance FreeVars a => FreeVars [a] where
+    freeVars = Set.unions . fmap freeVars
+
+instance FreeVars Expr where
+  freeVars ex = case ex of
+    ELam n x -> freeVars x Set.\\ Set.singleton n
+    ELet n v e -> (freeVars e Set.\\ Set.singleton n) `Set.union` (freeVars v)
+    EApp f xs -> freeVars f `Set.union` freeVars xs
+    ECase e m -> freeVars e `Set.union` Set.unions (fmap freeVars m)
+    EDo xs -> Set.unions (fmap freeVars xs)
+    EVar n -> Set.singleton n
+    ELit _ -> Set.empty
+    EIf c x y -> freeVars c `Set.union` freeVars x `Set.union` freeVars y
+    EAnn x _ -> freeVars x
+    EFail -> Set.empty
+
+instance FreeVars Match where
+  freeVars ex = case ex of
+    Match pats rhs -> freeVars rhs Set.\\ Set.unions (fmap allVars pats)
+
+
+instance FreeVars Decl where
+    freeVars (FunDecl bg) = freeVars bg
+    freeVars (DataDecl {}) = Set.empty
+    freeVars (TypeDecl {}) = Set.empty
+    freeVars (ClassDecl {}) = Set.empty
+    freeVars (InstDecl {}) = Set.empty
+    freeVars (FixityDecl {}) = Set.empty
+
+instance FreeVars Stmt where
+  freeVars ex = case ex of
+    Generator pat x -> freeVars x Set.\\ (allVars pat)
+    Qualifier x -> freeVars x
+
+
+instance FreeVars BindGroup where
+  freeVars (BindGroup _ pats _ _) = Set.unions (fmap freeVars pats)
+
+
+-- | Check, whether a variable name occurs in a value
+occursIn :: AllVars a => Name -> a -> Bool
+occursIn name ex = name `Set.member` (allVars ex)
+
+-- | Return a set with all the bound variables
+boundVars :: (FreeVars a, AllVars a) => a -> Set.Set Name
+boundVars ex = (allVars ex) `Set.difference` (freeVars ex)
+
+
+-- free pattern variables
+freePvs :: Pattern -> [Name]
+freePvs (PVar a) = [a]
+freePvs (PCon _ b) = concatMap freePvs b
+freePvs (PLit _) = []
+freePvs (PWild) = []
+
+-- ----------------------------------------------------------------------------
+-- Constants for the constructors of the built in syntax
+-- ----------------------------------------------------------------------------
+
+_paircon :: Name
+_paircon = "Pair" 
+
+_conscon :: Name
+_conscon = "Cons"
+
+_nilcon :: Name
+_nilcon = "Nil"
+
+mkEApp :: Expr -> [Expr] -> Expr
+mkEApp = foldl' EApp
+
+mkELam :: Expr -> [Name] -> Expr
+mkELam = foldr ELam
+
+mkPair :: [Expr] -> Expr
+mkPair = foldr1 pair
+  where
+    pair x y = mkEApp (EVar _paircon) [x,y]
+
+mkList :: [Expr] -> Expr
+mkList = foldr cons nil
+  where
+    cons x y = mkEApp (EVar _conscon) [x,y]
+    nil = EVar _nilcon
+
+mkIf :: Expr -> Expr
+mkIf (EIf c x y) =
+   ECase c [
+       Match [PCon "True" []] x,
+       Match [PCon "False" []] y
+   ]
+mkIf x = x
+
+-------------------------------------------------------------------------------
+-- Deconstructors
+-------------------------------------------------------------------------------
+viewVars :: Expr -> [Name]
+viewVars (ELam n a) = n : viewVars a
+viewVars _ = []
+
+viewLam :: Expr -> Expr
+viewLam (ELam _ a) = viewLam a
+viewLam x = x
+
+viewApp :: Expr -> (Expr, [Expr])
+viewApp = go []
+  where
+    go !xs (EApp a b) = go (b : xs) a
+    go xs f = (f, xs)
 
