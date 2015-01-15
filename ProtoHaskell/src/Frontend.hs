@@ -2,6 +2,9 @@
 -- Frontend.hs - ProtoHaskell Compiler
 -- ----------------------------------------------------------------------------
 --
+-- Fontend contains the data types and classes for language elements
+--         of ProtoHaskell
+--
 -- See: http://dev.stephendiehl.com/fun/
 --
 --
@@ -147,12 +150,12 @@ data ConDecl
 
 -- | Decl - all possible declarations
 data Decl
-    = FunDecl BindGroup                 -- functions: f x = x + 1
-    | TypeDecl Type                     -- types      f :: Int -> Int
-    | DataDecl Constr [Name] [ConDecl]  -- data defs: data T where {..}
-    | ClassDecl [Pred] Name Type [Decl] -- class      class (P) => where {..}
-    | InstDecl  [Pred] Name Type [Decl] -- instance declarations
-    | FixityDecl FixitySpec             -- infix 1 {...}
+    = FunDecl BindGroup                   -- functions: f x = x + 1
+    | TypeDecl Type                       -- types      f :: Int -> Int
+    | DataDecl Constr [Name] [ConDecl]    -- data defs: data T where {..}
+    | ClassDecl [Pred] Name [Name] [Decl] -- class      class (P) => where {..}
+    | InstDecl  [Pred] Name Type [Decl]   -- instance declarations
+    | FixityDecl FixitySpec               -- infix 1 {...}
     deriving (Eq, Show)
 
 -- | FixitySepc - Fixity declarations are simply a binding

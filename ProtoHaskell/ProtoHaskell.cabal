@@ -63,7 +63,8 @@ executable ProtoHaskell
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.7 && <4.8, 
                        containers >=0.5 && <0.6, 
-                       text >=1.1 && <1.2, 
+                       text >=1.1 && <1.2,
+                       pretty >= 1.1.1.1 && < 1.2,
                        mtl >=2.2 && <2.3
   hs-source-dirs:      src
   default-language:    Haskell2010
