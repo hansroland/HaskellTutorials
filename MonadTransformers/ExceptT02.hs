@@ -43,7 +43,7 @@ instance Monad m => Monad (ExceptT e m) where
   x >>= f = ExceptT $ runExceptT x >>= either (return . Left) (runExceptT .f)
 
 {-
--- This we cannot gneralize from IO to m
+-- This we cannot generalize from IO to m
 printExcept :: (Show a, Show e) => ExceptIO e a -> IO()
 printExcept x = do
    runExceptIO x >>= print
