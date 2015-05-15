@@ -37,8 +37,8 @@ table02 :: Monad m => HtmlT m ()
 table02 = do
    table_ [class_ "tblText"] $ do
      tr_ $ do
-       th_ "Name"
-       th_ "Salary"
+       th_ [width_ "80%"] "Name"
+       th_ [width_ "20%"] "Salary"
      tr_ $ do
        td_ "Ramesh"
        td_ "80000"
