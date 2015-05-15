@@ -11,3 +11,6 @@ cabal-dev
 .cabal-sandbox/
 cabal.sandbox.config
 cabal.config
+/Lucid/berg21.css
+/Lucid/berg21.html
+/Lucid/lucid01.html
