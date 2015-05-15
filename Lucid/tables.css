@@ -1,0 +1,33 @@
+
+/* This is just to test the linking of the table with the css */
+.tblSimple 
+{
+  background : rgb(125,125,125);
+  color      : rgb(0,0,0);
+  border     : dashed 2px rgb(255,255,0);
+}
+
+
+/* Make the cells really adjacent    */
+.tblText
+{
+    border-collapse:collapse;
+}
+
+/* Add a light gray and a fine line between the cells */
+.tblText td
+{
+   background: rgb(240,240,240);
+   border-style:solid; 
+   border-width:1px;
+   border-color:#000000;
+   padding: 10px;
+}
+
+/* Show the table headers in a little bit darker gray */
+.tblText th
+{
+   background: rgb(180,180,180);
+}
+ 
+
