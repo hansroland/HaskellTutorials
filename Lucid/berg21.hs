@@ -19,6 +19,7 @@ berg21 :: Monad m => HtmlT m ()
 berg21 = doctypehtml_ $ do
     head_ $ do
       title_ "Example 21"
+      link_ [rel_ "stylesheet", href_ "berg21.css"]
     body_ $ do
       ul_ [id_ "nav"] $ do
          lihref "Home"
