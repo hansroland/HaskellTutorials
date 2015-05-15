@@ -2,7 +2,7 @@
 -- clay21.hs - The clay code to example 2.1
 -- -------------------------------------------------------------
 --
--- use 
+-- use: renderToCssFile "berg21.css" clay21
 --
 
 import Data.Monoid
