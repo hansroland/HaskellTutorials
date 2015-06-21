@@ -16,6 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 executable EasyRaster
+  -- main-is:             GTK.hs
   main-is:             Main.hs
   other-modules:       GTKWrapper,
                        GTKWrapperSave 
