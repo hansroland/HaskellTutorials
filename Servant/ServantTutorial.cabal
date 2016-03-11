@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 
 executable Tutorial3
   main-is:             Tutorial3.hs
-  -- other-modules:
+  other-modules:       DemoTypes
   other-extensions:    DataKinds,
                        DeriveGeneric,
                        FlexibleInstances,
