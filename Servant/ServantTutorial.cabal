@@ -12,8 +12,8 @@ build-type:          Simple
 extra-source-files:  Server
 cabal-version:       >=1.10
 
-executable Tutorial1
-  main-is:             Tutorial1.hs
+executable Tutorial3
+  main-is:             Tutorial3.hs
   -- other-modules:
   other-extensions:    DataKinds,
                        DeriveGeneric,
