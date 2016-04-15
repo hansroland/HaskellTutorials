@@ -46,6 +46,9 @@ See: [Implementing a JIT Compiled Language with Haskell and LLVM](http://www.ste
 #### SubDirectory ErrorT
 [A Gentle Introduction to Monad Transformers](https://github.com/kqr/gists/blob/master/articles/gentle-introduction-monad-transformers.md)
 
+#### SubDirectory Scotty
+Some simple examples how to use Scotty
+
 
 
      
