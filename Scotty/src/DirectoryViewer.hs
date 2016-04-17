@@ -5,14 +5,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Web.Scotty
+
+import Network.Wai.Middleware.HttpAuth
+import Data.SecureMem -- for constant-time comparison
+
 import Directories
 import Data.Text
 import Control.Monad.Trans (liftIO)
 import Lucid
 
--- |
-main =
-  scotty 3000 routes
+-- | The main program
+main = scotty 3000 $ do
+  -- Authentication
+  middleware $ basicAuth
+     (\u p -> return $ u == "user" && secureMemFromByteString p == password)
+     "Directory Viewer"
+  routes
+
+-- | our not so excellent password
+password :: SecureMem
+password = secureMemFromByteString "password" -- https://xkcd.com/221/
 
 -- | The routing table
 routes :: ScottyM ()
