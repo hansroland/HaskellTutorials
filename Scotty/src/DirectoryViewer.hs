@@ -7,25 +7,26 @@
 import Web.Scotty
 import Directories
 import Data.Text
+import Control.Monad.Trans (liftIO)
 import Lucid
 
 -- |
-main = do
-  dirs <- subdirs ""
-  scotty 3000 $ routes $ fmap pack dirs
+main =
+  scotty 3000 routes
 
 -- | The routing table
-routes :: [Text] -> ScottyM ()
-routes dirs = do
-  get "/"                 $ showParent dirs
+routes :: ScottyM ()
+routes = do
+  get "/" showParent
   get "/dir/:dirName" $ do
     dir <- param "dirName"
     showSubdir dir
 
 -- | Handler when no parameter is given -> show first page
-showParent :: [Text] -> ActionM ()
-showParent dirs =
-     html $ renderText $ page1 dirs
+showParent :: ActionM ()
+showParent = do
+     dirs <- liftIO $ subdirs ""
+     html $ renderText $ page1 $ fmap pack dirs
 
 -- | Handler when a dir parameter is given
 --   http://localhost:3000/dir/test
