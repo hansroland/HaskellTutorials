@@ -18,6 +18,7 @@ main =
 routes :: ScottyM ()
 routes = do
   get "/" showParent
+  get "/dir" showParent
   get "/dir/:dirName" $ do
     dir <- param "dirName"
     showSubdir dir
